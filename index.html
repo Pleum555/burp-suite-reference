@@ -322,6 +322,7 @@
   <button onclick="show('usecases', this)">💡 Use Cases</button>
   <button onclick="show('cost', this)">💰 Cost Analysis</button>
   <button onclick="show('vulns', this)">🛡️ Vulnerability Coverage</button>
+  <button onclick="show('motion', this)">▶ Live Demo</button>
 </nav>
 
 <main>
@@ -771,6 +772,28 @@
     <p style="margin-top:20px; font-size:12px; color:var(--muted);">⭐ = PortSwigger Research ค้นพบเอง และ Burp detect ได้ก่อน tool อื่น</p>
   </section>
 
+
+  <!-- ═══ SECTION: Live Demo (Motion) ═══ -->
+  <section id="motion" class="section">
+    <h2>▶ Live Demo — Burp Suite Workflow Animation</h2>
+    <p class="subtitle">จำลองการทำงานจริงทีละขั้นตอน ตั้งแต่ Setup จนถึง Report</p>
+
+    <div style="background:#1a1a2e;border-radius:14px;padding:24px;font-family:'Segoe UI',sans-serif">
+
+      <!-- Step bar -->
+      <div id="demoStepBar" style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap"></div>
+
+      <!-- Stage -->
+      <div id="demoStage" style="min-height:340px;background:#16213e;border-radius:10px;padding:20px;border:1px solid rgba(255,255,255,0.08);position:relative;overflow:hidden"></div>
+
+      <!-- Controls -->
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+        <button onclick="demoPrev()" style="padding:8px 20px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#eaeaea;cursor:pointer;font-size:13px">◀ ก่อนหน้า</button>
+        <button id="demoNextBtn" onclick="demoNext()" style="padding:8px 20px;border-radius:8px;border:none;background:#FF6633;color:#fff;cursor:pointer;font-size:13px;font-weight:600">ถัดไป ▶</button>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -786,6 +809,217 @@ function show(id, btn) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'motion') renderDemoStep(demoCur);
+}
+
+/* ── Motion Demo ── */
+var demoCur = 0;
+var demoSteps = [
+  {
+    label: '1. Setup',
+    title: 'ตั้งค่า Browser → Proxy',
+    desc: 'กำหนดให้ Browser ส่ง traffic ผ่าน Burp Proxy 127.0.0.1:8080 แล้วติดตั้ง CA Certificate เพื่อ intercept HTTPS',
+    content: `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="flex:1;background:#0f3460;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#a0a0b0;margin-bottom:4px">Browser</div>
+          <div style="font-size:20px">🌐</div>
+          <div style="font-size:12px;color:#eaeaea">Chrome</div>
+        </div>
+        <div style="color:#FF6633;font-size:22px;animation:arrowPulse 1s infinite">→</div>
+        <div style="flex:1;background:#0f3460;border:2px solid #FF6633;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#a0a0b0;margin-bottom:4px">Burp Proxy</div>
+          <div style="font-size:20px">🔀</div>
+          <div style="font-size:12px;color:#FF6633">127.0.0.1:8080</div>
+        </div>
+        <div style="color:#FF6633;font-size:22px;animation:arrowPulse 1s infinite .3s">→</div>
+        <div style="flex:1;background:#0f3460;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#a0a0b0;margin-bottom:4px">Target Server</div>
+          <div style="font-size:20px">🖥️</div>
+          <div style="font-size:12px;color:#eaeaea">example.com</div>
+        </div>
+      </div>
+      <div style="background:#042C53;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;line-height:1.8;color:#85B7EB">
+        <span style="color:#FAC775">Browser Proxy Settings:</span><br>
+        &nbsp; Protocol: <span style="color:#9FE1CB">HTTP/HTTPS</span><br>
+        &nbsp; Host: <span style="color:#9FE1CB">127.0.0.1</span><br>
+        &nbsp; Port: <span style="color:#F0997B">8080</span><br>
+        &nbsp; CA Cert: <span style="color:#9FE1CB">PortSwigger CA ✓ installed</span>
+      </div>
+    `
+  },
+  {
+    label: '2. Intercept',
+    title: 'Proxy Intercept — ดักจับและแก้ไข Request',
+    desc: 'Burp รับ HTTP request ทุกตัว — ดูได้ แก้ได้ ก่อนส่งต่อไป server',
+    content: `
+      <div style="background:#042C53;border-radius:8px;overflow:hidden;font-family:monospace">
+        <div style="background:#0C447C;padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="color:#B5D4F4;font-size:12px">Burp Suite Pro — Proxy Intercept</span>
+          <span style="background:#185FA5;color:#E6F1FB;padding:2px 10px;border-radius:20px;font-size:11px;font-family:sans-serif">Intercept ON</span>
+        </div>
+        <div style="padding:14px;font-size:12px;color:#85B7EB;line-height:1.9">
+          <span style="color:#FAC775">POST</span> <span style="color:#9FE1CB">/api/login</span> HTTP/2<br>
+          <span style="color:#FAC775">Host:</span> <span style="color:#9FE1CB">target-app.example.com</span><br>
+          <span style="color:#FAC775">Content-Type:</span> <span style="color:#9FE1CB">application/json</span><br><br>
+          {<br>
+          &nbsp;&nbsp;<span style="color:#FAC775">"username"</span>: <span style="color:#9FE1CB">"admin"</span>,<br>
+          &nbsp;&nbsp;<span style="color:#FAC775">"password"</span>: <span style="color:#F0997B">"<u>' OR 1=1--</u>"</span> <span style="color:#F0997B;font-family:sans-serif;font-size:11px">← แก้ไข payload ที่นี่</span><br>
+          }
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:80px;background:#085041;border-radius:8px;padding:8px;text-align:center;font-size:12px;color:#9FE1CB">✓ Forward</div>
+        <div style="flex:1;min-width:80px;background:#501313;border-radius:8px;padding:8px;text-align:center;font-size:12px;color:#F09595">✗ Drop</div>
+        <div style="flex:1;min-width:80px;background:#042C53;border-radius:8px;padding:8px;text-align:center;font-size:12px;color:#B5D4F4">→ Repeater</div>
+        <div style="flex:1;min-width:80px;background:#412402;border-radius:8px;padding:8px;text-align:center;font-size:12px;color:#FAC775">→ Intruder</div>
+      </div>
+    `
+  },
+  {
+    label: '3. Scan',
+    title: 'Burp Scanner — หาช่องโหว่อัตโนมัติ',
+    desc: 'Scanner ส่ง payload และวิเคราะห์ response ทุก endpoint อัตโนมัติ ครอบคลุม OWASP Top 10',
+    content: `
+      <div style="background:#0f3460;border-radius:8px;padding:8px 14px;margin-bottom:12px;display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:#9FE1CB">🔍 Active Scan in progress...</span>
+        <span style="color:#FAC775">247 requests sent</span>
+      </div>
+      ${[
+        {name:'SQL Injection — /api/search?q=', pct:100, sev:'Critical', sc:'#A32D2D', bc:'#FCEBEB', tc:'#A32D2D'},
+        {name:'Reflected XSS — /page?msg=',     pct:100, sev:'Critical', sc:'#A32D2D', bc:'#FCEBEB', tc:'#A32D2D'},
+        {name:'SSRF — /fetch?url=',             pct:80,  sev:'High',     sc:'#854F0B', bc:'#FAEEDA', tc:'#854F0B'},
+        {name:'CSRF — /api/profile/update',     pct:80,  sev:'High',     sc:'#854F0B', bc:'#FAEEDA', tc:'#854F0B'},
+        {name:'Missing Security Headers',       pct:60,  sev:'Medium',   sc:'#3B6D11', bc:'#EAF3DE', tc:'#3B6D11'},
+        {name:'Verbose Error Messages',         pct:40,  sev:'Info',     sc:'#185FA5', bc:'#E6F1FB', tc:'#185FA5'},
+      ].map(r => `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="flex:1;font-size:12px;color:#eaeaea">${r.name}</div>
+          <div style="width:100px;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${r.pct}%;background:${r.sc};animation:scanBar .8s ease forwards"></div>
+          </div>
+          <div style="font-size:10px;padding:2px 10px;border-radius:20px;background:${r.bc};color:${r.tc};min-width:55px;text-align:center">${r.sev}</div>
+        </div>
+      `).join('')}
+      <style>@keyframes scanBar{from{width:0}to{width:var(--w,100%)}}</style>
+    `
+  },
+  {
+    label: '4. Exploit',
+    title: 'Repeater — ยืนยันช่องโหว่ด้วยมือ',
+    desc: 'ส่ง request ซ้ำด้วย payload ต่างๆ เพื่อยืนยันว่าช่องโหว่มีอยู่จริงและวัด impact',
+    content: `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:#a0a0b0;margin-bottom:6px">Request</div>
+          <div style="background:#042C53;border-radius:8px;overflow:hidden;font-family:monospace">
+            <div style="background:#0C447C;padding:5px 10px;font-size:11px;color:#B5D4F4">GET /api/user</div>
+            <div style="padding:10px;font-size:11px;color:#85B7EB;line-height:1.8">
+              <span style="color:#FAC775">GET</span> <span style="color:#F0997B">/api/user?id=<u>1 UNION SELECT username,password FROM users--</u></span><br>
+              <span style="color:#FAC775">Host:</span> <span style="color:#9FE1CB">target-app.example.com</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:#a0a0b0;margin-bottom:6px">Response — 200 OK ✓</div>
+          <div style="background:#042C53;border-radius:8px;overflow:hidden;font-family:monospace">
+            <div style="background:#085041;padding:5px 10px;font-size:11px;color:#9FE1CB">SQLi confirmed!</div>
+            <div style="padding:10px;font-size:11px;color:#85B7EB;line-height:1.8">
+              {<br>
+              &nbsp;"data": [{<br>
+              &nbsp;&nbsp;<span style="color:#FAC775">"username"</span>: <span style="color:#F0997B">"admin"</span>,<br>
+              &nbsp;&nbsp;<span style="color:#FAC775">"password"</span>: <span style="color:#F0997B">"5f4dcc3b..."</span><br>
+              &nbsp;}]<br>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;font-size:12px">
+        <div style="flex:1;background:#0f3460;border-radius:8px;padding:8px;text-align:center;color:#a29bfe">Repeater</div>
+        <div style="color:#FF6633;align-self:center">→</div>
+        <div style="flex:1;background:#0f3460;border-radius:8px;padding:8px;text-align:center;color:#FAC775">Intruder</div>
+        <div style="color:#FF6633;align-self:center">→</div>
+        <div style="flex:1;background:#0f3460;border-radius:8px;padding:8px;text-align:center;color:#B5D4F4">Burp AI</div>
+      </div>
+    `
+  },
+  {
+    label: '5. Report',
+    title: 'Automated Report — สรุปผลพร้อม Remediation',
+    desc: 'Export รายงานครบถ้วน พร้อม severity และวิธีแก้ไข ส่งให้ developer team ได้ทันที',
+    content: `
+      <div style="background:#0f3460;border-radius:8px;padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.08)">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#eaeaea">Penetration Test Report</div>
+            <div style="font-size:11px;color:#a0a0b0">target-app.example.com — 28 May 2026</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="font-size:11px;background:#501313;color:#F09595;padding:3px 10px;border-radius:20px">2 Critical</span>
+            <span style="font-size:11px;background:#412402;color:#FAC775;padding:3px 10px;border-radius:20px">2 High</span>
+            <span style="font-size:11px;background:#173404;color:#C0DD97;padding:3px 10px;border-radius:20px">1 Medium</span>
+          </div>
+        </div>
+        ${[
+          {dot:'#A32D2D', title:'SQL Injection — /api/search', desc:'Attacker ดึงข้อมูล user ทั้งหมดได้ รวมถึง password hash', fix:'Parameterized Queries'},
+          {dot:'#A32D2D', title:'Reflected XSS — /page?msg=', desc:'Inject JS เพื่อขโมย session cookie ของ user', fix:'Output Encoding + CSP'},
+          {dot:'#854F0B', title:'SSRF — /fetch?url=', desc:'เข้าถึง internal service ผ่าน server รวมถึง AWS metadata', fix:'URL Allowlist + Block redirects'},
+        ].map(r => `
+          <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+            <div style="width:10px;height:10px;border-radius:50%;background:${r.dot};flex-shrink:0;margin-top:4px"></div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#eaeaea">${r.title}</div>
+              <div style="font-size:11px;color:#a0a0b0;margin-top:2px">${r.desc}</div>
+              <span style="font-size:10px;background:#042C53;color:#9FE1CB;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:5px">Fix: ${r.fix}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;font-size:12px">
+        <div style="flex:1;background:#042C53;border-radius:8px;padding:8px;text-align:center;color:#B5D4F4">Export HTML/XML</div>
+        <div style="color:#FF6633;align-self:center">→</div>
+        <div style="flex:1;background:#085041;border-radius:8px;padding:8px;text-align:center;color:#9FE1CB">Dev Fix Issues</div>
+        <div style="color:#FF6633;align-self:center">→</div>
+        <div style="flex:1;background:#412402;border-radius:8px;padding:8px;text-align:center;color:#FAC775">Retest & Verify</div>
+      </div>
+    `
+  }
+];
+
+function renderDemoStep(i) {
+  var s = demoSteps[i];
+  var bar = document.getElementById('demoStepBar');
+  if (bar) {
+    bar.innerHTML = demoSteps.map(function(step, idx) {
+      return '<div onclick="renderDemoStep(' + idx + ')" style="flex:1;min-width:80px;padding:7px 10px;border-radius:8px;border:1px solid ' +
+        (idx === i ? '#FF6633' : 'rgba(255,255,255,0.1)') + ';background:' +
+        (idx === i ? 'rgba(255,102,51,0.15)' : 'transparent') + ';color:' +
+        (idx === i ? '#FF6633' : '#a0a0b0') + ';font-size:12px;cursor:pointer;text-align:center;transition:all .2s">' +
+        step.label + '</div>';
+    }).join('');
+  }
+  var stage = document.getElementById('demoStage');
+  if (stage) {
+    stage.style.opacity = '0';
+    stage.style.transform = 'translateY(8px)';
+    setTimeout(function() {
+      stage.innerHTML = '<div style="margin-bottom:14px"><div style="font-size:16px;font-weight:700;color:#eaeaea;margin-bottom:4px">' + s.title + '</div><div style="font-size:12px;color:#a0a0b0;margin-bottom:14px">' + s.desc + '</div>' + s.content + '</div>';
+      stage.style.transition = 'opacity .3s,transform .3s';
+      stage.style.opacity = '1';
+      stage.style.transform = 'translateY(0)';
+    }, 100);
+  }
+  demoCur = i;
+  var nb = document.getElementById('demoNextBtn');
+  if (nb) nb.textContent = demoCur === demoSteps.length - 1 ? 'เริ่มใหม่ ↩' : 'ถัดไป ▶';
+}
+
+function demoNext() {
+  renderDemoStep(demoCur < demoSteps.length - 1 ? demoCur + 1 : 0);
+}
+function demoPrev() {
+  if (demoCur > 0) renderDemoStep(demoCur - 1);
 }
 </script>
 </body>
